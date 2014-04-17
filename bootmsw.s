@@ -65,7 +65,12 @@ nxbit:	mov	$'0', %dl		# numeral '0' into DL
 
 	# now begin an infinite loop (until the machine reboots)
 
-freeze:	jmp	freeze			# spin here until reboot
+freeze:				# spin here until reboot
+    mov $0, %ah     # await keypress
+    int $0x16
+
+    int $0x19       # reboot system
+    jmp	freeze
 #-----------------------------------------------------------------
 	.org	510			# boot-signature offset
 	.byte	0x55, 0xAA		# and signature's value
