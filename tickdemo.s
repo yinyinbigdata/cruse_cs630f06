@@ -36,10 +36,17 @@
 start:	ljmp	$seg_boot, $main	# re-normalize CS and IP
 #------------------------------------------------------------------
 ticks:	.word	0			# keeps count of 'ticks'
+seconds:    .word   0       # keeps count of 'second', 18 ticks equal 1 seconds
 #------------------------------------------------------------------
 isr_tick:  # Interrupt Service Routine for timer-tick interrupts
 	push	%ax			# preverve AX contents
 	incw	%cs:ticks		# increment tick-count
+    cmp     $0x12, %cs:ticks
+    jb      no_seconds
+    incw    %cs:seconds
+    mov     $0x0000, %ax
+    mov     %ax, %cs:ticks
+no_seconds:
 	mov	$0x20, %al		# send 'EOI' command to
 	out	%al, $0x20		#  Interrupt Controller
 	pop	%ax			# restore saved register
@@ -86,7 +93,8 @@ main:	# setup segment-registers DS, ES, FS so that we can access
 	# into its representation as a string of decimal numerals,
 	# then writes our message-string into video screen memory
 again:	mov	$5, %di			# point past 5-place buffer
-	mov	ticks, %ax		# setup the dividend in AX 
+	#mov	ticks, %ax		# setup the dividend in AX 
+    mov seconds, %ax        # use seconds
 nxdiv:	
 	# perform a division of AX by ten 
 	xor	%dx, %dx		# zero-extend the dividend 
@@ -125,7 +133,7 @@ nxpel:	lodsb				# fetch next character-byte
 	# restore original interrupt-vector to the IVT (INT 8)
 
 	mov	sav+0, %eax		# fetch the saved vector
-	mov	%eax, %fs:0x0020	# store it into the IVT
+    mov    %eax, %fs:0x0020    # store it into the IVT
 
 	# re-boot the machine
 
