@@ -61,9 +61,21 @@ main:	# setup segment-registers DS and ES to address our data
 	# store current contents of registers IDTR and GDTR
 	sidtl	idtr			# store register IDTR
 	sgdtl	gdtr			# store register GDTR
+    
+    # entry protected mode
+    cli
+    mov %cr0, %eax
+    bts $0, %eax
+    mov %eax, %cr0
 
-	## sldt	ldtr		# <--- Illegal in 'real-mode'
-	## str	tr		# <--- Illegal in 'real-mode'
+	sldt	ldtr		# <--- Illegal in 'real-mode'
+	str 	tr		# <--- Illegal in 'real-mode'
+    
+    # leave protected mode
+    mov %cr0, %eax
+    btr $0, %eax
+    mov %eax, %cr0
+    sti
 
 
 	# format the register-value from IDTR
@@ -83,6 +95,18 @@ main:	# setup segment-registers DS and ES to address our data
 	lea	_cr0, %di
 	mov	$4, %cx
 	call	bin2hex
+    
+    # format the register-value from LDTR
+    lea ldtr, %si
+    lea _ldtr, %di
+    mov $2, %cx
+    call    bin2hex
+    
+    # format the register-value from TR
+    lea tr, %si
+    lea _tr, %di
+    mov $2, %cx
+    call    bin2hex    
 
 	# write the formatted message-string to the screen
 	call	display_report
