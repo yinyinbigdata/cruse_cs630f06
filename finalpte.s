@@ -14,6 +14,7 @@
 //-----------------------------------------------------------------
 
 	.equ	seg_boot, 0x07C0  	# the BOOT_LOCN's segment
+    .equ    seg_greet, 0x1000   # the greeting's segment
 
 	.code16				# for Pentium 'real-mode'
 
@@ -24,6 +25,10 @@ start:	ljmp	$seg_boot, $main	# re-normalizes CS and IP
 packet:	.byte	16, 0, 1, 0		# packet-size and sectors
 	.word	0x0200, seg_boot	# transfer-area's address
 	.quad	0			# logical block's address
+#------------------------------------------------------------------
+packet_greet: .byte  16, 0, 1, 0     #packet-size and sectors
+    .word   0x0000, seg_greet        # tranfer-area's address
+    .quad   1           # logical block's address
 #------------------------------------------------------------------
 hex:	.ascii	"0123456789ABCDEF"	# array of the hex digits
 msg:	.ascii	"\n\r  Final Partition-Table Entry: "
@@ -76,7 +81,20 @@ over:	# display message showing table-entry's contents
 	mov	$0x1301, %ax		# write_string function
 	int	$0x10			# request BIOS service
 
-	# await keypress
+	# read the greeting Record
+	lea	packet_greet, %si		# point DS:SI to packet
+	mov	$0x80, %dl		# setup Drive-ID in DL
+	mov	$0x42, %ah		# setup EDD_READ in AH
+	int	$0x13			# invoke BIOS service
+	jc	greet_over		# failure? skip search
+    
+    # lcall $seg_greet, 0x0002
+    # ljmp    $seg_greet, $begin
+    lcall  $seg_greet, $0x0002
+
+greet_over:
+        
+    # await keypress
 	mov	$0x00, %ah		# get_keyboard_input
 	int	$0x16			# request BIOS service
 
