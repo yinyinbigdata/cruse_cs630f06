@@ -19,9 +19,22 @@
 #------------------------------------------------------------------
 	ljmp	$0x07C0, $main		# re-normalize CS and IP
 #------------------------------------------------------------------
-packet:	.byte	16, 0, 16, 0		# packet-size, sector-count
-	.word	0x0000, 0x1000		# memory-address for code
-	.quad	0x0A3E6D4B		# LBA for starting sector
+packet:    .byte    16, 0, 16, 0        # packet-size, sector-count
+    #.word    0x0000, 0x1000        # memory-address for code
+    #.quad    0x0A3E6D4B        # LBA for starting sector
+    .quad   0x00000001      # our LBA is the 1 sector
+
+# lab6: 0x00040000 256KB
+# packet:    .byte    16, 0, 16, 0        # packet-size, sector-count
+#     .word   0x4000, 0x0000      # lab6: 0x00040000 256KB
+#     .quad   0x00000001      # our LBA is the 1 sector
+
+#lab6 : 0x01000000 16MB
+# packet:    .byte    24, 0, 16, 0        # packet-size, sector-count
+#     .word    0x0000, 0x0000        # memory-address for code
+#     .quad   0x00000001      # our LBA is the 1 sector
+#     .quad   0x01000000      # physical-address of memory trasnfer-area
+
 #------------------------------------------------------------------
 main:	# setup segment-registers to address our program data	
 	mov	%cs, %ax

@@ -50,7 +50,9 @@ return_handle:	.word	0, 0		# storage for stack-pointer
 theGDT:	.word	0x0000, 0x0000, 0x0000, 0x0000	# null descriptor
 	.word	0xFFFF, 0x0000, 0x9A01, 0x0000	# code descriptor
 	.word	0xFFFF, 0x0000, 0x9201, 0x0000	# data descriptor
-	.word	0x7FFF, 0x8000, 0x920B, 0x0000	# vram descriptor
+	#.word	0x7FFF, 0x8000, 0x920B, 0x0000	# vram descriptor
+    .word	0x7FFF, 0x8000, 0xB20B, 0x0000	# vram descriptor DPL 1
+    #.word   0x0007, 0x8000, 0x920B, 0x0080  # vram descriptor "page"
 #-------------------------------------------------------------------
 regGDT:	.word	0x001F, theGDT, 0x0001	# image for register GDTR
 #-------------------------------------------------------------------
