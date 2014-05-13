@@ -53,12 +53,19 @@ theTSS:	.word	0x0000			# back-link (not used)
 	.word	0x0000			# reserve for SP0 value
 	.word	0x0000			# reserve for SS0 value
 	.equ	limTSS, (.-theTSS)-1	# the TSS's segment-limit
+
+# exercise 1:
+theTSS32: .word   0x0000, 0x0000 # back-link (not used)
+    .word   0x0000, 0x0000     # reserve for ESP0
+    .word   0x0000, 0x0000     # reserve for SS0
+    .equ    limTSS32, (.-theTSS32)-1
 #------------------------------------------------------------------
 #------------------------------------------------------------------
 theGDT:	.word	0x0000, 0x0000, 0x0000, 0x0000	# null descriptor
 	
 	.equ	sel_tss, (.-theGDT)+0	# selector for task-state
-	.word	limTSS, theTSS, 0x8101, 0x0000	# task-descriptor
+    # .word    limTSS, theTSS, 0x8101, 0x0000    # task-descriptor
+    .word	limTSS32, theTSS32, 0x8901, 0x0000	# task-descriptor (32-bit)
 
 	.equ	sel_cs0, (.-theGDT)+0	# selector for ring0-code
 	.word	0xFFFF, 0x0000, 0x9A01, 0x0000	# code-descriptor
@@ -76,7 +83,8 @@ theGDT:	.word	0x0000, 0x0000, 0x0000, 0x0000	# null descriptor
 	.word	0x7FFF, 0x8000, 0xB20B, 0x0000	# vram-descriptor
 
 	.equ	sel_ret, (.-theGDT)+0	# selector for call-gate
-	.word	finis, sel_cs0, 0xA400, 0x0000	# gate-descriptor  
+	#.word	finis, sel_cs0, 0xA400, 0x0000	# gate-descriptor 
+    .word	finis, sel_cs0, 0xAC00, 0x0000	# gate-descriptor (32-bit)
 
 	.equ	limGDT, (.-theGDT)-1	# the GDT's segment-limit
 #------------------------------------------------------------------
@@ -115,8 +123,12 @@ exec_ring1_procedure:
 
 	# store the current SS and SP in our Task-State Segment
 
-	mov	%sp, %ss:theTSS+2	# save SP in SP0-field
-	mov	%ss, %ss:theTSS+4	# save SS in SS0-field
+    # mov    %sp, %ss:theTSS+2    # save SP in SP0-field
+    # mov    %ss, %ss:theTSS+4    # save SS in SS0-field
+    
+    # 32-bit TSS
+    mov %sp, %ss:theTSS32+4     # save SP in ESP0-field 
+    mov %ss, %ss:theTSS32+8     # save SS in SS0-filed
 
 	# initialize the TR system-register
 
@@ -125,16 +137,19 @@ exec_ring1_procedure:
 
 	# setup ring0 stack for a 'return' to our ring1 procedure
 
-	pushw	$sel_ds1		# push image for SS
-	pushw	$tos1			# push image for SP
-	pushw	$sel_cs1		# push image for CS
-	pushw	$showmsg		# push image for IP
-	lret				# load the four registers
+    pushw    $sel_ds1        # push image for SS
+    pushw    $tos1            # push image for SP
+    pushw    $sel_cs1        # push image for CS
+    pushw    $showmsg        # push image for IP
+    lret                # load the four registers
+    
 
 	# OK, this is where the processor will resume execution in
 	# ring0 (by transferring control here through a call-gate)
+    # yinyin: we share the one ss:sp on ring0, so need discard the theTSS32.
 finis:
-	add	$8, %sp			# discard callgate words 
+    # add    $8, %sp            # discard callgate words 
+    add $16, %sp      # discard callgate words (32-bit)
 
 	ret				# return control to main
 #------------------------------------------------------------------
