@@ -51,7 +51,8 @@ theGDT:	.word	0x0000, 0x0000, 0x0000, 0x0000	# null descriptor
 	.word	0xFFFF, 0x0000, 0x9A01, 0x0000	# code descriptor
 	.word	0xFFFF, 0x0000, 0x9201, 0x0000	# data descriptor
 	.word	0x0067, myTSS1, 0x8901, 0x0000	# task descriptor
-	.word	0x0067, myTSS2, 0x8901, 0x0000	# task descriptor
+	#.word	0x0067, myTSS2, 0x8901, 0x0000	# task descriptor
+    .word	0x0067, myTSS2, 0xE901, 0x0000	# task descriptor (ring 3)
 	.word	0xFFFF, 0x0000, 0x9200, 0x008F	# flat descriptor
 #------------------------------------------------------------------
 #------------------------------------------------------------------
